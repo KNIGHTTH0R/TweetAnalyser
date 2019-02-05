@@ -22,26 +22,19 @@ print(winter_storm_words)
 tweet_filenames = glob('../snow-tweets/*.csv')
 df = pd.read_csv(tweet_filenames[3])
 
-tweets = df[200:300]['text']
+tweets = df[10:20]['text']
 
 tm = TweetManager()
 
 print('\nTWEETS')
-relevant_tweets = []
-irrelevant_tweets = []
 for tweet in tweets:
     clean_tweet = tm.clean_tweet(tweet, winter_storm_words)
-    
-    relevant_tweet = tm.relevant_tweet(clean_tweet, winter_storm_words)
-    if relevant_tweet:
-        relevant_tweets.append(clean_tweet)
-    else:
-        irrelevant_tweets.append(clean_tweet)
+    found_words = tm.find_dictionary_words(clean_tweet, winter_storm_words)
+    found_hashtags = tm.find_hashtags(tweet)
+    print('Original Tweet :: {}'.format(tweet))
+    print('Clean Tweet :: {}'.format(clean_tweet))
+    print('Found Words :: {}'.format(found_words))
+    print('Found Hashtags :: {}'.format(found_hashtags))
+    print('\n')
 
-print('\nRELEVANT TWEETS.')
-for tweet in relevant_tweets:
-    print(tweet)
-print('\nIRRELEVANT TWEETS.')
-for tweet in irrelevant_tweets:
-    print(tweet)
 #nlp.close() # Do not forget to close! The backend server will consume a lot memery.
