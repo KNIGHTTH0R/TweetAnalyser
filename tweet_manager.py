@@ -15,7 +15,7 @@ rgx_interstate = re.compile(r'[iI]-[0-9]+')
 
 class TweetManager():
 
-    def relevant_tweet(tweet, dictionary):
+    def relevant_tweet(self, tweet, dictionary):
         found_words = []
         for word in tweet.split():
             if word in dictionary:
@@ -23,7 +23,11 @@ class TweetManager():
 
         return len(found_words) > 0
 
-    def parse_tweet(tweet, dictionary):
+    def clean_tweet(self, tweet, dictionary):
+        """
+        This method thakes a single tweet and removes everything that
+        I considered unnecessary (this might change in future).
+        """
         min_len = DictionaryManager.shortest_len_in_dictionary(dictionary)
 
         parsed_tweet = tweet
@@ -39,7 +43,7 @@ class TweetManager():
 
         return ' '.join(final_parsed_tweet)
 
-    def find_tweet(tweet):
+    def find_tweet(self, tweet):
         matches = rgx_interstate.finditer(tweet)
 
         found = []
@@ -59,6 +63,6 @@ class Tweet():
         self.height = False
 
     def parse_tweet(self):
-        height = rgx_inches.search(tweet)
+        height = rgx_inches.search(self.original_tweet)
         if height:
             self.height = True

@@ -14,35 +14,34 @@ winter_storm_phrases = DictionaryManager.phrases_from_files(winter_storm_filenam
 
 winter_storm_words = DictionaryManager.words_from_files(winter_storm_filenames)
 
-print(winter_storm_phrases)
-print('====')
+#print(winter_storm_phrases)
+#print('====')
 print(winter_storm_words)
 
 # Input Tweets
 tweet_filenames = glob('../snow-tweets/*.csv')
-df = pd.read_csv(tweet_filenames[0])
+df = pd.read_csv(tweet_filenames[3])
+
+tweets = df[200:300]['text']
+
+tm = TweetManager()
 
 print('\nTWEETS')
-tweet_set = df[1:100]['text']
-
-for tweet in tweet_set:
-    found = TweetManager.find_tweet(tweet)
-    if found:
-        print('YES: {}, F: {}'.format(tweet, found[0].group(0)))
-    #else:
-    #    print('NO: {}'.format(tweet))
-    print('========')
-
-    """
-    parsed_tweet = TweetManager.parse_tweet(tweet, winter_storm_words)
-    relevant_tweet = TweetManager.relevant_tweet(parsed_tweet, winter_storm_words)
+relevant_tweets = []
+irrelevant_tweets = []
+for tweet in tweets:
+    clean_tweet = tm.clean_tweet(tweet, winter_storm_words)
+    
+    relevant_tweet = tm.relevant_tweet(clean_tweet, winter_storm_words)
     if relevant_tweet:
-        print('YES: {}'.format(tweet))
-        print('Parsed: {}'.format(parsed_tweet))
+        relevant_tweets.append(clean_tweet)
     else:
-        print('NO: {}'.format(tweet))
-        print('Parsed: {}'.format(parsed_tweet))
+        irrelevant_tweets.append(clean_tweet)
 
-    print('====')
-    """
+print('\nRELEVANT TWEETS.')
+for tweet in relevant_tweets:
+    print(tweet)
+print('\nIRRELEVANT TWEETS.')
+for tweet in irrelevant_tweets:
+    print(tweet)
 #nlp.close() # Do not forget to close! The backend server will consume a lot memery.
