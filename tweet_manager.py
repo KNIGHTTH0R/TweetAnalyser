@@ -25,6 +25,19 @@ class TweetManager():
 
         return list(found_words)
 
+    def find_dictionary_words_in_hashtags(self, hashtags, dictionary):
+        """
+        This method takes a list of hashtags and checks if they exist
+        in the passed in dictionary of words.
+        """
+        found_words = set()
+        for hashtag in hashtags:
+            hashtag_lower = hashtag.lower()
+            if hashtag_lower in dictionary:
+                found_words.add(hashtag_lower)
+        
+        return list(found_words)
+
     def find_hashtags(self, tweet):
         matches = rgx_hashtag.finditer(tweet)
 
@@ -33,6 +46,18 @@ class TweetManager():
             hashtags.append(match.group(0))
 
         return hashtags
+
+    def hashtags_to_words(self, hashtags):
+        """
+        This method extracts words from a list of hashtags,
+        and returns a list of extracted words.
+        """
+        words = []
+        for hashtag in hashtags:
+            found_words = re.findall('[A-Z][^A-Z]*', hashtag[1:])
+            words += found_words
+        
+        return list(set(words))
 
     def clean_tweet(self, tweet, dictionary):
         """
