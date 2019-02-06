@@ -17,7 +17,30 @@ rgx_interstate = re.compile(r'[iI]-[0-9]+')
 
 class TweetManager():
 
-    def find_dictionary_words(self, tweet, dictionary):
+    def tweets_analysis_phase_one(self, tweets, dictionary):
+        analysed_tweets = []
+        for tweet in tweets:
+            clean_tweet = self.clean_tweet(tweet, dictionary)
+            hashtags = self.find_hashtags(tweet)
+            parsed_hashtags = self.hashtags_to_words(hashtags)
+            features_in_tweet = self.find_features_tweet(clean_tweet, dictionary)
+            features_in_hashtags = self.find_features_hashtags(parsed_hashtags, dictionary)
+
+            accepted = len(features_in_hashtags) > 0 or len(features_in_tweet) > 0
+
+            analysed_tweets.append({
+                'tweet': tweet,
+                'clean_tweet': clean_tweet,
+                'hashtags': hashtags,
+                'parsed_hashtags': parsed_hashtags,
+                'features_in_tweet': features_in_tweet,
+                'features_in_hashtags': features_in_hashtags,
+                'accepted': accepted
+            })
+
+        return analysed_tweets
+
+    def find_features_tweet(self, tweet, dictionary):
         found_words = set()
         for word in tweet.split():
             if word in dictionary:
@@ -25,7 +48,7 @@ class TweetManager():
 
         return list(found_words)
 
-    def find_dictionary_words_in_hashtags(self, hashtags, dictionary):
+    def find_features_hashtags(self, hashtags, dictionary):
         """
         This method takes a list of hashtags and checks if they exist
         in the passed in dictionary of words.
@@ -94,14 +117,17 @@ class TweetManager():
 
         return None
 
-class Tweet():
+class SnowTweet():
 
-    def __init__(self,tweet):
-        self.original_tweet = tweet
-        self.hashtags = []
-        self.height = False
+    def __init__(self,original_tweet,hashtags):
+        self.original_tweet = original_tweet
+        self.hashtags = hashtags
 
     def parse_tweet(self):
-        height = rgx_inches.search(self.original_tweet)
-        if height:
-            self.height = True
+        # Clean up the tweet first, so there are less terms to search.
+        snow_height = rgx_inches.search(self.original_tweet)
+        if snow_height:
+            self.snow_height = True
+
+    def get_tweet(self):
+        return self.original_tweet
