@@ -11,6 +11,22 @@ rgx_whitespace = re.compile(r'\s+')
 
 rgx_hashtag = re.compile(r'\B#\w*[a-zA-Z]+\w*')
 
+# Inches range
+"""
+\d{1,2}
+["'`]?
+\s+
+(-|to)
+\s+
+\d{1,2}
+["'`]?
+\s*
+inches?
+"""
+#\d{1,2}[\"\'\`]?\s?(-|to)\s?\d{1,2}[\"\'\`]?\s?inches? <-- worked
+#\d{1,2}[\"\'\`]?\s*(-|to)\s*\d{1,2}[\"\'\`]?\s*inches?
+rgx_inches_range = re.compile(r'\d{1,2}[\"\'\`]?\s?(-|to)\s?\d{1,2}[\"\'\`]?\s?(inches)?')
+
 # Fails on: 6-12 inches
 rgx_inches = re.compile(r'(\d{1-2}["”]*\s?(-|to)\s?)?\d{1,2}\w*("|”|inches)')
 rgx_interstate = re.compile(r'[iI]-[0-9]+')
@@ -106,7 +122,7 @@ class TweetManager():
         """
         Temporary method to tell if a tweet contains required Regex.
         """
-        matches = rgx_interstate.finditer(tweet)
+        matches = rgx_inches_range.finditer(tweet)
 
         found = []
         for match in matches:
