@@ -1,39 +1,17 @@
 import re
 from dictionary_manager import DictionaryManager
-
-# Regex
-# TO-DO: Create regex for xx inches of snow
-# Regex for location
-
-rgx_link = re.compile(r'https?://[\w\d.-/]+')
-rgx_punctuation = re.compile(r'[^\w\d\s#]')
-rgx_whitespace = re.compile(r'\s+')
-
-rgx_hashtag = re.compile(r'\B#\w*[a-zA-Z]+\w*')
-
-# Inches range
-"""
-\d{1,2}
-["'`]?
-\s+
-(-|to)
-\s+
-\d{1,2}
-["'`]?
-\s*
-inches?
-"""
-#\d{1,2}[\"\'\`]?\s?(-|to)\s?\d{1,2}[\"\'\`]?\s?inches? <-- worked
-#\d{1,2}[\"\'\`]?\s*(-|to)\s*\d{1,2}[\"\'\`]?\s*inches?
-rgx_inches_range = re.compile(r'\d{1,2}[\"\'\`]?\s?(-|to)\s?\d{1,2}[\"\'\`]?\s?(inches)?')
-
-# Fails on: 6-12 inches
-rgx_inches = re.compile(r'(\d{1-2}["”]*\s?(-|to)\s?)?\d{1,2}\w*("|”|inches)')
-rgx_interstate = re.compile(r'[iI]-[0-9]+')
+from utils import *
 
 class TweetManager():
 
     def tweets_analysis_phase_one(self, tweets, dictionary):
+        """
+        This function is the first phase of filtering incoming tweets.
+        It takes an original tweet, cleans it using 'clean_tweet' function,
+        extracts hashtags and looks for features (from dictionary) within
+        the tweet itself and hashtags.
+        If it finds any features, the tweet is accepted and added to the retured list.
+        """
         analysed_tweets = []
         for tweet in tweets:
             clean_tweet = self.clean_tweet(tweet, dictionary)
@@ -133,6 +111,15 @@ class TweetManager():
 
         return None
 
+    def save_to_file(self, analysed_tweets, filename):
+        """
+        This method takes 'analysed_tweets' from 'tweets_analysis_phase_one()'
+        """
+        with open(filename, 'w') as f:
+            for tweet in analysed_tweets:
+                tweet_text = tweet['tweet']
+                f.write(tweet_text + "\n")
+
 class SnowTweet():
 
     def __init__(self,original_tweet,hashtags):
@@ -141,9 +128,44 @@ class SnowTweet():
 
     def parse_tweet(self):
         # Clean up the tweet first, so there are less terms to search.
-        snow_height = rgx_inches.search(self.original_tweet)
-        if snow_height:
-            self.snow_height = True
+        #snow_height = rgx_inches.search(self.original_tweet)
+        #if snow_height:
+        #    self.snow_height = True
+        pass
 
     def get_tweet(self):
         return self.original_tweet
+
+    def local_grammar(self, center_word, left_list, right_list, num_left_right=1):
+        """
+        Parameters.
+        center_word: the base word that we're looking for,
+        left_list, right_list: lists of words that can appear to the left/right
+        of the center word,
+        num_left_right: how many words to the left/right of the center word to consider
+        """
+        parsed_tweet = rgx_punctuation.sub(' ', self.original_tweet)
+        parsed_tweet = rgx_whitespace.sub(' ', parsed_tweet)
+        
+        tweet_tokens = parsed_tweet.lower().split(' ')
+        max_index = len(tweet_tokens) - 1
+
+        for index,token in enumerate(tweet_tokens):
+            if token and token == center_word:
+                center_word_index = index
+                
+                left_index = center_word_index - num_left_right
+                right_index = center_word_index + num_left_right
+
+                if left_index < 0: left_index = 0
+                if right_index > max_index: right_index = max_index
+
+                left_word = tweet_tokens[left_index]
+                right_word = tweet_tokens[right_index]
+
+                if left_word in left_list:
+                    print('Found LG: [{} {} {}]'.format(left_word, token, right_word))
+                    print('Full Tweet: {}'.format(self.original_tweet))
+                    print('\n')
+
+                

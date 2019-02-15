@@ -1,0 +1,4 @@
+# Snowfall Local Grammar - 1 word to the left of 'snowfall'.
+significant
+potential
+heavy

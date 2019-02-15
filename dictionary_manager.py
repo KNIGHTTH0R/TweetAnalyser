@@ -62,5 +62,3 @@ class DictionaryManager():
 
         return shortest_len
 
-    def tweet_breakdown(tweet):
-        pass
