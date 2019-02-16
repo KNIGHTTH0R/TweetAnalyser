@@ -21,6 +21,10 @@ def print_tweet_status(tweet, hashtags, clean_tweet, features_in_tweet,
     print('Features in hashtags :: {}'.format(features_in_hashtags))
 
 def collocates(sentences_list, target_word, top_n):
+    """
+    This function performs a frequency distribution of the words
+    appearing to the left and to the right of the target_word.
+    """
     target_word = target_word.lower()
     num_left_right = 1
 

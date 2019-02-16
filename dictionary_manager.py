@@ -62,3 +62,14 @@ class DictionaryManager():
 
         return shortest_len
 
+    def tweets_to_file(self, tweets, filename):
+        """
+        This method saves tweets to a file.
+        """
+        if not tweets or type(tweets) is not list:
+            print("DictionaryManager.tweets_to_file() Error :: argument 'tweets' must be a list.")
+            return None
+
+        with open(filename, 'w') as f:
+            for tweet in tweets:
+                f.print(tweet)

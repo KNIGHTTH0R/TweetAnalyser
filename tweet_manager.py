@@ -12,6 +12,7 @@ class TweetManager():
         the tweet itself and hashtags.
         If it finds any features, the tweet is accepted and added to the retured list.
         """
+
         analysed_tweets = []
         for tweet in tweets:
             clean_tweet = self.clean_tweet(tweet, dictionary)
@@ -151,6 +152,7 @@ class SnowTweet():
         tweet_tokens = parsed_tweet.lower().split(' ')
         max_index = len(tweet_tokens) - 1
 
+        local_grammar = { 'left': '', 'right': '' }
         for index,token in enumerate(tweet_tokens):
             if token and token == center_word:
                 center_word_index = index
@@ -165,12 +167,9 @@ class SnowTweet():
                 right_word = tweet_tokens[right_index]
 
                 if left_word in left_list:
-                    print('Found LG (1 LEFT): [{} {}]'.format(left_word, token))
-                    print('Full Tweet: {}'.format(self.original_tweet))
-                    print('Hashtags: {}'.format(self.hashtags))
-                    print('\n')
+                    local_grammar['left'] = left_word
+
                 if right_word in right_list:
-                    print('Found LG (1 RIGHT): [{} {}]'.format(token, right_word))
-                    print('Full Tweet: {}'.format(self.original_tweet))
-                    print('Hashtags: {}'.format(self.hashtags))
-                    print('\n')
+                    local_grammar['right'] = right_word
+
+        return local_grammar
