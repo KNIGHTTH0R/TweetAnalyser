@@ -4,7 +4,7 @@ class DictionaryManager():
     # eg. if 'snow' is a term, Twitter variant might be '#snow'
     # Make each dictionary an object?
 
-    def phrases_from_files(filenames):
+    def phrases_from_files(self, filenames):
         """
         This method takes a list of file names and returns a list
         of unique phrases in those files.
@@ -23,7 +23,7 @@ class DictionaryManager():
 
         return list(phrases)
 
-    def words_from_files(filenames):
+    def words_from_files(self, filenames):
         """
         This method takes a list of file names and returns a list
         of unique words in those files.
@@ -45,7 +45,7 @@ class DictionaryManager():
 
         return list(words)
 
-    def shortest_len_in_dictionary(dictionary):
+    def shortest_len_in_dictionary(self, dictionary):
         """
         This method takes a list of words 'dictionary' and returns the length of
         the shortest word.

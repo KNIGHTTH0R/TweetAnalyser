@@ -81,7 +81,8 @@ class TweetManager():
         This method thakes a single tweet and removes everything that
         I considered unnecessary (this might change in future).
         """
-        min_len = DictionaryManager.shortest_len_in_dictionary(dictionary)
+        dm = DictionaryManager()
+        min_len = dm.shortest_len_in_dictionary(dictionary)
 
         parsed_tweet = tweet
         parsed_tweet = rgx_link.sub('LINK', parsed_tweet)
@@ -164,8 +165,12 @@ class SnowTweet():
                 right_word = tweet_tokens[right_index]
 
                 if left_word in left_list:
-                    print('Found LG: [{} {} {}]'.format(left_word, token, right_word))
+                    print('Found LG (1 LEFT): [{} {}]'.format(left_word, token))
                     print('Full Tweet: {}'.format(self.original_tweet))
+                    print('Hashtags: {}'.format(self.hashtags))
                     print('\n')
-
-                
+                if right_word in right_list:
+                    print('Found LG (1 RIGHT): [{} {}]'.format(token, right_word))
+                    print('Full Tweet: {}'.format(self.original_tweet))
+                    print('Hashtags: {}'.format(self.hashtags))
+                    print('\n')
