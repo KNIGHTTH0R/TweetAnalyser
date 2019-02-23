@@ -34,14 +34,6 @@ for tweet in analysed_tweets_fp:
         st = SnowTweet(original_tweet=tweet['tweet'],
                        hashtags=tweet['hashtags'])
         snow_tweets.append(st)
-        """
-        print('\n')
-        print_tweet_status(tweet=tweet['tweet'],
-                            hashtags=tweet['hashtags'],
-                            clean_tweet=tweet['clean_tweet'],
-                            features_in_tweet=tweet['features_in_tweet'],
-                            features_in_hashtags=tweet['features_in_hashtags'])
-        """
 
 left_list = dm.words_from_files(['./Dictionaries/snowfall_lg1l.txt'])
 right_list = dm.words_from_files(['./Dictionaries/snowfall_lg1r.txt'])
@@ -51,6 +43,7 @@ collocates_analysis = collocates(tweets, 'snowfall', 5)
 print('LEFT: {}'.format(collocates_analysis['left']))
 print('RIGHT: {}'.format(collocates_analysis['right']))
 
+"""
 print('\nLOCAL GRAMMAR')
 for st in snow_tweets:
         lg = st.local_grammar('snowfall',left_list,right_list)
@@ -59,7 +52,7 @@ for st in snow_tweets:
                 print('LG: {} {} {}'.format(lg['left'], 'snowfall', lg['right']))
                 print(st.original_tweet)
                 print('\n')
-
+"""
 
 #pos_tagged = nlp.pos_tag(st.get_tweet())
 #nlp = StanfordCoreNLP(LOCATION_STARFORD_CORE_NLP)

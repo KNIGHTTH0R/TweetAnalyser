@@ -107,3 +107,4 @@ venv.bak/
 secret.py
 *.txt
 Dictionaries
+live-tweets

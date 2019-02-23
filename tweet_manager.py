@@ -127,16 +127,22 @@ class SnowTweet():
     def __init__(self,original_tweet,hashtags):
         self.original_tweet = original_tweet
         self.hashtags = hashtags
+        self.retweet_from = None
 
-    def parse_tweet(self):
-        # Clean up the tweet first, so there are less terms to search.
-        #snow_height = rgx_inches.search(self.original_tweet)
-        #if snow_height:
-        #    self.snow_height = True
-        pass
+    def extract_links(self):
+        matches = rgx_link.finditer(self.original_tweet)
+
+        links = []
+        for match in matches:
+            links.append(match.group(0))
+
+        self.links = links
 
     def get_tweet(self):
         return self.original_tweet
+
+    def get_hashtags(self):
+        return self.hashtags
 
     def local_grammar(self, center_word, left_list, right_list, num_left_right=1):
         """
