@@ -108,3 +108,4 @@ secret.py
 *.txt
 Dictionaries
 live-tweets
+.vscode/

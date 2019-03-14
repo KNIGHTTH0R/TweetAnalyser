@@ -6,7 +6,7 @@ from secret import *
 from dictionary_manager import DictionaryManager
 from tweet_manager import TweetManager, SnowTweet
 
-from config.config import *
+from ..config.config import *
 
 # 0. Notes - Tweet Info
 # "screen_name" - twitter username
@@ -22,14 +22,21 @@ winter_storm_words = dm.words_from_files(winter_storm_filenames)
 tweets_filename = glob(TWEETS_FILE)
 df_tweets = pd.read_json(tweets_filename[0], orient='records')
 
-tweets_start = df_tweets[:40]
+tweets_start = df_tweets[:NUM_OF_TWEETS_TO_USE]
 print('Starting with :: {} :: Tweets'.format(len(tweets_start)))
 
 
-# TEST
-#tweets_test = df_tweets[:2][['text','retweeted_status']]
-#print(tweets_test)
-# TEST
+# Printing tweets text gives a chance to study the tweets.
+# If doing so, all analysis is disabled.
+if PRINT_TWEETS_TEXT:
+        PRINT_REJECTED_PHASE_ONE = False
+        PRINT_ACCEPTED_PHASE_ONE = False
+        PRINT_COLLOCATES = False
+        PRINT_LOCAL_GRAMMAR = False
+        PRINT_NON_LG_TWEETS = False
+
+        for tweet_text in tweets_start['text']:
+                print(tweet_text)
 
 tm = TweetManager()
 
@@ -51,6 +58,13 @@ for i, tweet in enumerate(analysed_tweets_fp):
                 rejected_tweets.append(st)
 
 print('\nAfter First Phase analysis (FP) :: {} :: Tweets left'.format(len(accepted_tweets)))
+
+if PRINT_ACCEPTED_PHASE_ONE:
+        print('\nTWEETS ACCEPTED IN PHASE ONE.')
+        print('{')
+        for tweet in accepted_tweets:
+                print(tweet.original_tweet)
+        print('}')
 
 if PRINT_REJECTED_PHASE_ONE:
         print('\nTWEETS REJECTED IN PHASE ONE.')
@@ -77,13 +91,13 @@ if PRINT_LOCAL_GRAMMAR:
         non_lg_tweets = []
         print('\nLOCAL GRAMMAR')
         for st in accepted_tweets:
-                lg = st.local_grammar('snowfall',left_list,right_list)
+                lg = st.local_grammar(LG_CENTRE_WORD,left_list,right_list)
 
                 if lg['left'] or lg['right']:
                         st.extract_links()
                         lg_tweets.append(st)
                         print(st.original_tweet)
-                        print('LG: [{} {} {}]'.format(lg['left'], 'snowfall', lg['right']))
+                        print('LG: [{} {} {}]'.format(lg['left'], LG_CENTRE_WORD, lg['right']))
 
                         if st.hashtags:
                                 print(st.hashtags)

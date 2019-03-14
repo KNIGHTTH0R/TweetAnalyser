@@ -3,15 +3,15 @@ from dictionary_manager import DictionaryManager
 from utils import *
 
 class TweetManager():
-
+    """
     def tweets_analysis_phase_one(self, tweets, dictionary):
-        """
-        This function is the first phase of filtering incoming tweets.
-        It takes an original tweet, cleans it using 'clean_tweet' function,
-        extracts hashtags and looks for features (from dictionary) within
-        the tweet itself and hashtags.
-        If it finds any features, the tweet is accepted and added to the retured list.
-        """
+        
+        #This function is the first phase of filtering incoming tweets.
+        #It takes an original tweet, cleans it using 'clean_tweet' function,
+        #extracts hashtags and looks for features (from dictionary) within
+        #the tweet itself and hashtags.
+        #If it finds any features, the tweet is accepted and added to the retured list.
+        
 
         analysed_tweets = []
         for tweet in tweets:
@@ -34,6 +34,7 @@ class TweetManager():
             })
 
         return analysed_tweets
+    """
 
     def find_features_tweet(self, tweet, dictionary):
         found_words = set()
@@ -77,50 +78,26 @@ class TweetManager():
         
         return list(set(words))
 
-    def clean_tweet(self, tweet, dictionary):
+    def clean_tweet(self, text):
         """
         This method thakes a single tweet and removes everything that
         I considered unnecessary (this might change in future).
         """
-        dm = DictionaryManager()
-        min_len = dm.shortest_len_in_dictionary(dictionary)
+        
+        parsed_text = text
+        # Links can be extracted or substituted with something that indicates found link.
 
-        parsed_tweet = tweet
-        parsed_tweet = rgx_link.sub('LINK', parsed_tweet)
-        parsed_tweet = rgx_punctuation.sub(' ', parsed_tweet)
-        parsed_tweet = rgx_whitespace.sub(' ', parsed_tweet)
-        parsed_tweet = parsed_tweet.lower()
+        parsed_text = rgx_link.sub(' ', parsed_text)
+        parsed_text = rgx_hashtag.sub(' ', parsed_text)
+        parsed_text = rgx_mention.sub(' ', parsed_text)
 
-        final_parsed_tweet = []
-        for word in parsed_tweet.split():
-            if len(word) >= min_len:
-                final_parsed_tweet.append(word)
+        parsed_text = rgx_rt.sub(' ', parsed_text)
 
-        return ' '.join(final_parsed_tweet)
+        #parsed_text = rgx_punctuation.sub(' ', parsed_text)
+        parsed_text = rgx_whitespace.sub(' ', parsed_text)
+        parsed_text = parsed_text.lower()
 
-    def find_tweet(self, tweet):
-        """
-        Temporary method to tell if a tweet contains required Regex.
-        """
-        matches = rgx_inches_range.finditer(tweet)
-
-        found = []
-        for match in matches:
-            found.append(match)
-
-        if len(found) > 0:
-            return found
-
-        return None
-
-    def save_to_file(self, analysed_tweets, filename):
-        """
-        This method takes 'analysed_tweets' from 'tweets_analysis_phase_one()'
-        """
-        with open(filename, 'w') as f:
-            for tweet in analysed_tweets:
-                tweet_text = tweet['tweet']
-                f.write(tweet_text + "\n")
+        return parsed_text
 
 class SnowTweet():
 

@@ -7,10 +7,13 @@ rgx_punctuation = re.compile(r'[^\w\d\s#]')
 rgx_whitespace = re.compile(r'\s+')
 
 rgx_hashtag = re.compile(r'\B#\w*[a-zA-Z]+\w*')
+rgx_mention = re.compile(r'\B@\w*[a-zA-Z]+\w*')
+rgx_rt = re.compile(r'RT\s')
 
 # For Local Grammar
 rgx_inches_range = re.compile(r'\d{1,2}[\"\'\`]?\s?(-|to)\s?\d{1,2}[\"\'\`]?\s?(inches)?')
 rgx_interstate = re.compile(r'[iI]-[0-9]+')
+
 
 def print_tweet_status(tweet, hashtags, clean_tweet, features_in_tweet,
                        features_in_hashtags):
