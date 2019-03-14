@@ -3,60 +3,45 @@ from dictionary_manager import DictionaryManager
 from utils import *
 
 class TweetManager():
-    """
-    def tweets_analysis_phase_one(self, tweets, dictionary):
-        
-        #This function is the first phase of filtering incoming tweets.
-        #It takes an original tweet, cleans it using 'clean_tweet' function,
-        #extracts hashtags and looks for features (from dictionary) within
-        #the tweet itself and hashtags.
-        #If it finds any features, the tweet is accepted and added to the retured list.
-        
 
-        analysed_tweets = []
-        for tweet in tweets:
-            clean_tweet = self.clean_tweet(tweet, dictionary)
-            hashtags = self.find_hashtags(tweet)
-            parsed_hashtags = self.hashtags_to_words(hashtags)
-            features_in_tweet = self.find_features_tweet(clean_tweet, dictionary)
-            features_in_hashtags = self.find_features_hashtags(parsed_hashtags, dictionary)
-
-            accepted = len(features_in_hashtags) > 0 or len(features_in_tweet) > 0
-
-            analysed_tweets.append({
-                'tweet': tweet,
-                'clean_tweet': clean_tweet,
-                'hashtags': hashtags,
-                'parsed_hashtags': parsed_hashtags,
-                'features_in_tweet': features_in_tweet,
-                'features_in_hashtags': features_in_hashtags,
-                'accepted': accepted
-            })
-
-        return analysed_tweets
-    """
-
-    def find_features_tweet(self, tweet, dictionary):
+    def find_keywords_in_tweet(self, tweet, keywords):
         found_words = set()
         for word in tweet.split():
-            if word in dictionary:
+            if word in keywords:
                 found_words.add(word)
 
         return list(found_words)
 
-    def find_features_hashtags(self, hashtags, dictionary):
+    def find_hashtags_with_keywords(self, hashtags, keywords):
         """
-        This method takes a list of hashtags and checks if they exist
-        in the passed in dictionary of words.
+        This method takes a list of hashtags belogning to a single tweet.
+        Returns a list of hashtags that contain keywords.
         """
-        found_words = set()
-        for hashtag in hashtags:
-            hashtag_lower = hashtag.lower()
-            if hashtag_lower in dictionary:
-                found_words.add(hashtag_lower)
-        
-        return list(found_words)
 
+        hashtags_with_keywords = []
+
+        for hashtag in hashtags:
+
+            hashtag_words = self.__hashtag_to_words(hashtag)    
+
+            if len(hashtag_words):
+                for word in hashtag_words:
+                    if word.lower() in keywords:
+                        hashtags_with_keywords.append(hashtag)
+                        continue
+
+        return hashtags_with_keywords
+
+    def __hashtag_to_words(self, hashtag):
+        """
+        This method extracts words from a list of hashtags,
+        and returns a list of extracted words.
+        """
+        
+        found_words = re.findall('[a-zA-Z][^A-Z]*', hashtag[1:])
+        
+        return list(set(found_words))
+    
     def find_hashtags(self, tweet):
         matches = rgx_hashtag.finditer(tweet)
 
@@ -65,18 +50,6 @@ class TweetManager():
             hashtags.append(match.group(0))
 
         return hashtags
-
-    def hashtags_to_words(self, hashtags):
-        """
-        This method extracts words from a list of hashtags,
-        and returns a list of extracted words.
-        """
-        words = []
-        for hashtag in hashtags:
-            found_words = re.findall('[A-Z][^A-Z]*', hashtag[1:])
-            words += found_words
-        
-        return list(set(words))
 
     def clean_tweet(self, text):
         """
@@ -93,7 +66,7 @@ class TweetManager():
 
         parsed_text = rgx_rt.sub(' ', parsed_text)
 
-        #parsed_text = rgx_punctuation.sub(' ', parsed_text)
+        parsed_text = rgx_punctuation.sub(' ', parsed_text)
         parsed_text = rgx_whitespace.sub(' ', parsed_text)
         parsed_text = parsed_text.lower()
 

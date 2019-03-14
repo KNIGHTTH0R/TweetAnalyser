@@ -53,7 +53,3 @@ for st in snow_tweets:
                 print(st.original_tweet)
                 print('\n')
 """
-
-#pos_tagged = nlp.pos_tag(st.get_tweet())
-#nlp = StanfordCoreNLP(LOCATION_STARFORD_CORE_NLP)
-#nlp.close() # Do not forget to close! The backend server will consume a lot memery.
