@@ -19,6 +19,16 @@ from dictionary_manager import DictionaryManager
 from secret import *
 
 import json
+import re
+
+# KEYS
+KEY_TEXT_ORIGINAL = "KEY_TEXT_ORIGINAL"
+KEY_TEXT_FILTERED = "KEY_TEXT_ORIGINAL"
+KEY_HASHTAGS_WITH_KEYWORDS = "KEY_HASHTAGS_WITH_KEYWORDS"
+KEY_TEXT_KEYWORDS = "KEY_TEXT_KEYWORDS"
+
+# LOCAL GRAMMAR RULES
+rgx_rule_one = re.compile(r'TARGET-IN-NNP')
 
 def text_from_tweet(tweet):
     if tweet['truncated']:
@@ -91,17 +101,53 @@ def keyword_filter(tweet_objects, keywords):
         content_filtered_text = tm.clean_tweet(tweet_text)
 
         keywords_in_text = tm.find_keywords_in_tweet(content_filtered_text, keywords)
-        keywords_in_hashtags = tm.find_hashtags_with_keywords(hashtags, keywords)
+        hashtags_with_keywords = tm.find_hashtags_with_keywords(hashtags, keywords)
 
-        if len(keywords_in_text) or len(keywords_in_hashtags):
+        if len(keywords_in_text) or len(hashtags_with_keywords):
             filtered_list.append({
-                'text_original': tweet_text,
-                'text_filtered': content_filtered_text,
-                'hashtags': keywords_in_hashtags,
-                'text_keywords': keywords_in_text
+                KEY_TEXT_ORIGINAL: tweet_text,
+                KEY_TEXT_FILTERED: content_filtered_text,
+                KEY_HASHTAGS_WITH_KEYWORDS: hashtags_with_keywords,
+                KEY_TEXT_KEYWORDS: keywords_in_text
             })
 
     return filtered_list
+
+def local_grammar_analysis(tweets, target_word):
+
+    # POS tagging
+    st = StanfordCoreNLP(LOCATION_STARFORD_CORE_NLP)
+    
+    for tweet in tweets_to_analyse:
+        if target_word in tweet[KEY_TEXT_KEYWORDS]:
+            # Original POS tags
+            pos_tagged = st.pos_tag(tweet[KEY_TEXT_FILTERED])
+            
+            target_index = -1
+            for i, tup in enumerate(pos_tagged):
+                if tup[0] == target_word:
+                    target_index = i
+            
+            # POS tags string (for Regex)
+            pos_string = [tup[1] for tup in pos_tagged]
+            pos_string[target_index] = 'TARGET'
+
+            pos_string = '-'.join(pos_string)
+            
+            print('\n')
+
+            # Regex Search
+            rule_one_matches = rgx_rule_one.finditer(pos_string)
+            
+            if rule_one_matches:
+                for match in rule_one_matches:
+                    # TO-DO: If gets into this loop, match found, do something with the tweet.
+                    print(match[0])
+            
+            print(tweet[KEY_TEXT_FILTERED])
+            print(pos_string)
+
+    st.close() # Do not forget to close! The backend server will consume a lot memery.
 
 # Main Function
 if __name__ == "__main__":
@@ -126,34 +172,8 @@ if __name__ == "__main__":
     keyword_filtered = keyword_filter(unique_raw_tweets, winter_storm_words)
     print('Keyword filtered tweets. Text and Hashtags only. Size: {}'.format(len(keyword_filtered)))
 
-    """
     # Local Grammar Analysis
-    tweets_for_lg = keyword_filtered #[:20]
+    tweets_to_analyse = keyword_filtered[5:7]
+    local_grammar_analysis(tweets_to_analyse, 'snowfall')
 
-    print('\n')
-    
-    main_word = 'snowfall'
-    """
-    # POS tagging
-    #st = StanfordCoreNLP(LOCATION_STARFORD_CORE_NLP)
-    """
-    for tweet in tweets_for_lg:
-        if main_word in tweet['text_keywords']:
-            #pos_tagged = st.pos_tag(tweet['text'])
-            print(tweet['text_filtered'])
-            print()
-
-            
-            for i, tup in enumerate(pos_tagged):
-                if tup[0] == main_word:
-                    left = ""
-                    center = tup
-                    right = ""
-                    if i - 1 > 0:
-                        left = pos_tagged[i-1]
-                    if i + 1 < len(pos_tagged):
-                        right = pos_tagged[i+1]
-                    print('Found: {}{}{} in position {}'.format(left, tup, right, i))
-    """
-    #st.close() # Do not forget to close! The backend server will consume a lot memery.
     
