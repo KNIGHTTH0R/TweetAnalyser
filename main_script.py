@@ -20,6 +20,12 @@ from secret import *
 
 import json
 
+def text_from_tweet(tweet):
+    if tweet['truncated']:
+       return tweet['extended_tweet']['full_text']
+
+    return tweet['text']
+
 def load_tweets(filename):
     """
     Takes a filename.
@@ -43,7 +49,7 @@ def language_filter(tweet_objects):
     filtered_list = []
 
     for tweet in tweet_objects:    
-        lang = detect(tweet['text'])
+        lang = detect(text_from_tweet(tweet))
         if lang == 'en':
             filtered_list.append(tweet)
 
@@ -59,7 +65,7 @@ def duplicates_filter(tweet_objects):
     filtered_list = []
 
     for tweet in tweet_objects:
-        t_text = tweet['text']
+        t_text = text_from_tweet(tweet)
         
         if t_text not in cache:
             filtered_list.append(tweet)
@@ -79,7 +85,7 @@ def keyword_filter(tweet_objects, keywords):
 
     for tweet in tweet_objects:
         # Separate text and hashtags
-        tweet_text = tweet['text']
+        tweet_text = text_from_tweet(tweet)
         hashtags = tm.find_hashtags(tweet_text)
 
         content_filtered_text = tm.clean_tweet(tweet_text)
@@ -88,8 +94,9 @@ def keyword_filter(tweet_objects, keywords):
         keywords_in_hashtags = tm.find_hashtags_with_keywords(hashtags, keywords)
 
         if len(keywords_in_text) or len(keywords_in_hashtags):
-            filtered_list.append({ 
-                'text': content_filtered_text,
+            filtered_list.append({
+                'text_original': tweet_text,
+                'text_filtered': content_filtered_text,
                 'hashtags': keywords_in_hashtags,
                 'text_keywords': keywords_in_text
             })
@@ -105,7 +112,7 @@ if __name__ == "__main__":
     dm = DictionaryManager()
     winter_storm_words = dm.words_from_files(winter_storm_terms_filenames)
 
-    filename = glob('./live-tweets/RawTweets/*.json')[0]
+    filename = glob('./live-tweets/TweetBank/*.json')[0]
     raw_tweets = load_tweets(filename)
     print('Loaded tweets. Size: {}'.format(len(raw_tweets)))
 
@@ -115,26 +122,38 @@ if __name__ == "__main__":
 
     unique_raw_tweets = duplicates_filter(en_raw_tweets)
     print('Duplicates removed. Size: {}'.format(len(unique_raw_tweets)))
-    
+
     keyword_filtered = keyword_filter(unique_raw_tweets, winter_storm_words)
     print('Keyword filtered tweets. Text and Hashtags only. Size: {}'.format(len(keyword_filtered)))
 
+    """
     # Local Grammar Analysis
-    tweets_for_lg = keyword_filtered[:20]
+    tweets_for_lg = keyword_filtered #[:20]
 
-    main_word = 'snow'
-
+    print('\n')
+    
+    main_word = 'snowfall'
+    """
     # POS tagging
-    st = StanfordCoreNLP(LOCATION_STARFORD_CORE_NLP)
+    #st = StanfordCoreNLP(LOCATION_STARFORD_CORE_NLP)
+    """
     for tweet in tweets_for_lg:
         if main_word in tweet['text_keywords']:
-            pos_tagged = st.pos_tag(tweet['text'])
+            #pos_tagged = st.pos_tag(tweet['text'])
+            print(tweet['text_filtered'])
+            print()
 
-            print(pos_tagged)
-
-            """    
+            
             for i, tup in enumerate(pos_tagged):
                 if tup[0] == main_word:
-                    print('Found: {} in position {}'.format(tup, i))
-            """
-    st.close() # Do not forget to close! The backend server will consume a lot memery.
+                    left = ""
+                    center = tup
+                    right = ""
+                    if i - 1 > 0:
+                        left = pos_tagged[i-1]
+                    if i + 1 < len(pos_tagged):
+                        right = pos_tagged[i+1]
+                    print('Found: {}{}{} in position {}'.format(left, tup, right, i))
+    """
+    #st.close() # Do not forget to close! The backend server will consume a lot memery.
+    

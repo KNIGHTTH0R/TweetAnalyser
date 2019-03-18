@@ -68,7 +68,7 @@ class TweetManager():
 
         parsed_text = rgx_punctuation.sub(' ', parsed_text)
         parsed_text = rgx_whitespace.sub(' ', parsed_text)
-        parsed_text = parsed_text.lower()
+        #parsed_text = parsed_text.lower()
 
         return parsed_text
 
