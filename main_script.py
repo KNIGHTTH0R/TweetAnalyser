@@ -18,6 +18,9 @@ from tweet_manager import TweetManager
 from dictionary_manager import DictionaryManager
 from secret import *
 
+from nltk.tokenize import word_tokenize
+import nltk
+
 import ast
 import json
 import re
@@ -29,7 +32,17 @@ KEY_HASHTAGS_WITH_KEYWORDS = "KEY_HASHTAGS_WITH_KEYWORDS"
 KEY_TEXT_KEYWORDS = "KEY_TEXT_KEYWORDS"
 
 # LOCAL GRAMMAR RULES
-rgx_rule_one = re.compile(r'TARGET-IN-NNP')
+
+# signigicant snowfall, heavy snowfall
+rule_one = r"""RULEONE: {<JJ>{1}<TARGET>{1}}"""
+rule_one_parser = nltk.RegexpParser(rule_one)
+
+def snow_depth_rules(tagged_text):
+    rule_depth = r"""DEPTH: {<CD>{1}<TO>?<CD>{1}}"""
+    rule_depth_parser = nltk.RegexpParser(rule_depth)
+
+    parsed = rule_depth_parser.parse(tagged_text)
+    return parsed
 
 def print_info(filenames):
     print('=== FILENAMES LIST ===')
@@ -138,43 +151,32 @@ def keyword_filter(tweet_objects, keywords):
     return filtered_list
 
 def local_grammar_analysis(tweets, target_word):
-
-    # POS tagging
-    st = StanfordCoreNLP(LOCATION_STARFORD_CORE_NLP)
-    
     for tweet in tweets:
         if target_word in tweet[KEY_TEXT_KEYWORDS]:
-            # Original POS tags
-            pos_tagged = st.pos_tag(tweet[KEY_TEXT_FILTERED])
-            
-            target_index = -1
-            for i, tup in enumerate(pos_tagged):
-                if tup[0] == target_word:
-                    target_index = i
-            
-            # POS tags string (for Regex)
-            pos_string = [tup[1] for tup in pos_tagged]
-            pos_string[target_index] = 'TARGET'
+            words = word_tokenize(tweet[KEY_TEXT_FILTERED])
+            tagged = nltk.pos_tag(words)
 
-            pos_string = '-'.join(pos_string)
-            
+            # Replace target word tag with TARGET
+            for i, (word, tag) in enumerate(tagged):
+                if word == target_word:
+                    tagged[i] = (word, 'TARGET')
+
+            #parsed = rule_one_parser.parse(tagged)
+            print(tagged)
             print('\n')
-            
-            """
-            # Regex Search
-            rule_one_matches = rgx_rule_one.finditer(pos_string)
-            
-            if rule_one_matches:
-                for match in rule_one_matches:
-                    # TO-DO: If gets into this loop, match found, do something with the tweet.
-                    print('MATCH: {}'.format(match[0]))
-            """
-            print(tweet[KEY_TEXT_FILTERED])
-            print(pos_string)
 
-    st.close() # Do not forget to close! The backend server will consume a lot memery.
+    """
+            for subtree in parsed.subtrees():
+                if subtree.label() == 'RULEONE':
+                    # Found sentence with a rule.
+                    #print('RULE ONE FOUND: {}'.format(subtree))
+                    print(words)
+                    print(tagged)
+                    print(parsed)
+                    print('\n')
+    """
 
-def run_program(raw_tweets, keywords):
+def run_program(raw_tweets, keywords, target_word):
     # Filtering
     en_raw_tweets = language_filter(raw_tweets)
     print('Language filter completed. Size: {}'.format(len(en_raw_tweets)))
@@ -187,7 +189,44 @@ def run_program(raw_tweets, keywords):
 
     # Local Grammar Analysis
     tweets_to_analyse = keyword_filtered
-    local_grammar_analysis(tweets_to_analyse, 'snowfall')
+    local_grammar_analysis(tweets_to_analyse, target_word)
+
+def tag_text(text, keywords, target_word):
+    tm = TweetManager()
+
+    hashtags = tm.find_hashtags(text)
+
+    content_filtered_text = tm.clean_tweet(text)
+
+    keywords_in_text = tm.find_keywords_in_tweet(content_filtered_text, keywords)
+    hashtags_with_keywords = tm.find_hashtags_with_keywords(hashtags, keywords)
+
+    filtered_tweet = {}
+    if len(keywords_in_text) or len(hashtags_with_keywords):
+        filtered_tweet = {
+            KEY_TEXT_ORIGINAL: text,
+            KEY_TEXT_FILTERED: content_filtered_text,
+            KEY_HASHTAGS_WITH_KEYWORDS: hashtags_with_keywords,
+            KEY_TEXT_KEYWORDS: keywords_in_text
+        }
+    
+    # LG
+    if target_word in filtered_tweet[KEY_TEXT_KEYWORDS]:
+        words = word_tokenize(filtered_tweet[KEY_TEXT_FILTERED])
+        tagged = nltk.pos_tag(words)
+
+        # Replace target word tag with TARGET
+        for i, (word, tag) in enumerate(tagged):
+            if word == target_word:
+                tagged[i] = (word, 'TARGET')
+
+        parsed = snow_depth_rules(tagged)
+
+        print(tagged)
+
+        for subtree in parsed.subtrees():
+            if subtree.label() == 'DEPTH':
+                print(subtree)
 
 # Main Function
 if __name__ == "__main__":
@@ -207,6 +246,12 @@ if __name__ == "__main__":
     raw_tweets = load_tweets_backup(filenames[0])
     print('Loaded tweets. Size: {}'.format(len(raw_tweets)))
 
-    run_program(raw_tweets, winter_storm_words)
+    # Running main program
+    run_program(raw_tweets, winter_storm_words, 'snowfall')
+
+    #test_text = 'RT   NE Ohio...it will basically be a 6" to 10" snowfall with some totals around a foot.  Wind a big factor Saturday night.…'
+    #test_text = 'RT   This major storm system dropped another 18-30" of new snow since yesterday bringing the storm total to 33-48" and coun…'
+
+    #tag_text(test_text, winter_storm_words, 'snow')
 
     

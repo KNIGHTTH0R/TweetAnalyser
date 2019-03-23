@@ -93,39 +93,3 @@ class SnowTweet():
 
     def get_hashtags(self):
         return self.hashtags
-
-    def local_grammar(self, center_word, left_list, right_list, num_left_right=1):
-        """
-        Parameters.
-        center_word: the base word that we're looking for,
-        left_list, right_list: lists of words that can appear to the left/right
-        of the center word,
-        num_left_right: how many words to the left/right of the center word to consider
-        """
-        parsed_tweet = rgx_punctuation.sub(' ', self.original_tweet)
-        parsed_tweet = rgx_whitespace.sub(' ', parsed_tweet)
-        
-        tweet_tokens = parsed_tweet.lower().split(' ')
-        max_index = len(tweet_tokens) - 1
-
-        local_grammar = { 'left': '', 'right': '' }
-        for index,token in enumerate(tweet_tokens):
-            if token and token == center_word:
-                center_word_index = index
-                
-                left_index = center_word_index - num_left_right
-                right_index = center_word_index + num_left_right
-
-                if left_index < 0: left_index = 0
-                if right_index > max_index: right_index = max_index
-
-                left_word = tweet_tokens[left_index]
-                right_word = tweet_tokens[right_index]
-
-                if left_word in left_list:
-                    local_grammar['left'] = left_word
-
-                if right_word in right_list:
-                    local_grammar['right'] = right_word
-
-        return local_grammar
