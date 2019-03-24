@@ -44,6 +44,13 @@ def snow_depth_rules(tagged_text):
     parsed = rule_depth_parser.parse(tagged_text)
     return parsed
 
+def interstate_rules(tagged_text):
+    rule_interstate = r"""INTERSTATE: {<PRP>{1}<CD>{1}}"""
+    rule_interstate_parser = nltk.RegexpParser(rule_interstate)
+
+    parsed = rule_interstate_parser.parse(tagged_text)
+    return parsed
+
 def print_info(filenames):
     print('=== FILENAMES LIST ===')
     for i, fn in enumerate(filenames):
@@ -150,7 +157,8 @@ def keyword_filter(tweet_objects, keywords):
 
     return filtered_list
 
-def local_grammar_analysis(tweets, target_word):
+def pos_tagging(tweets, target_word):
+    tagged_tweets = []
     for tweet in tweets:
         if target_word in tweet[KEY_TEXT_KEYWORDS]:
             words = word_tokenize(tweet[KEY_TEXT_FILTERED])
@@ -161,22 +169,35 @@ def local_grammar_analysis(tweets, target_word):
                 if word == target_word:
                     tagged[i] = (word, 'TARGET')
 
-            #parsed = rule_one_parser.parse(tagged)
-            print(tagged)
-            print('\n')
+            tagged_obj = { 'original': tweet, 'tagged': tagged }
+            tagged_tweets.append(tagged_obj)
 
-    """
+    return tagged_tweets 
+
+def local_grammar_analysis(tweets, target_word):
+
+    for tweet in tweets:
+        if target_word in tweet['original'][KEY_TEXT_KEYWORDS]:
+            
+            parsed = snow_depth_rules(tweet['tagged'])
             for subtree in parsed.subtrees():
-                if subtree.label() == 'RULEONE':
-                    # Found sentence with a rule.
-                    #print('RULE ONE FOUND: {}'.format(subtree))
-                    print(words)
-                    print(tagged)
-                    print(parsed)
+                if subtree.label() == 'DEPTH':
                     print('\n')
-    """
+                    print('KEYWORD: {}'.format(target_word))
+                    print('LOCAL GRAMMAR: {}'.format(subtree))
+                    print('TWEET: {}'.format(tweet['original'][KEY_TEXT_ORIGINAL]))
 
-def run_program(raw_tweets, keywords, target_word):
+            parsed = interstate_rules(tweet['tagged'])
+            for subtree in parsed.subtrees():
+                if subtree.label() == 'INTERSTATE':
+                    print('\n')
+                    print('KEYWORD: {}'.format(target_word))
+                    print('LOCAL GRAMMAR: {}'.format(subtree))
+                    print('TWEET: {}'.format(tweet['original'][KEY_TEXT_ORIGINAL]))
+            
+
+
+def run_program(raw_tweets, keywords, target_list):
     # Filtering
     en_raw_tweets = language_filter(raw_tweets)
     print('Language filter completed. Size: {}'.format(len(en_raw_tweets)))
@@ -188,8 +209,12 @@ def run_program(raw_tweets, keywords, target_word):
     print('Keyword filtered tweets. Text and Hashtags only. Size: {}'.format(len(keyword_filtered)))
 
     # Local Grammar Analysis
+    # Separated Tag and LG Analysis methods.
+    # Run LG on tagged tweets.
     tweets_to_analyse = keyword_filtered
-    local_grammar_analysis(tweets_to_analyse, target_word)
+    for target_word in target_list:
+        tagged = pos_tagging(tweets_to_analyse, target_word)
+        local_grammar_analysis(tagged, target_word)
 
 def tag_text(text, keywords, target_word):
     tm = TweetManager()
@@ -247,11 +272,15 @@ if __name__ == "__main__":
     print('Loaded tweets. Size: {}'.format(len(raw_tweets)))
 
     # Running main program
-    run_program(raw_tweets, winter_storm_words, 'snowfall')
+    run_program(raw_tweets, winter_storm_words, ['snow', 'snowfall'])
 
     #test_text = 'RT   NE Ohio...it will basically be a 6" to 10" snowfall with some totals around a foot.  Wind a big factor Saturday night.…'
     #test_text = 'RT   This major storm system dropped another 18-30" of new snow since yesterday bringing the storm total to 33-48" and coun…'
+    #test_text = 'Locations near I-55 and east picked up a quick one to three inches of new snowfall Thursday'
 
+    # Northern Illinois - NNP NNP
+    #test_text = 'So both NAMs have 6 12 inches of snow across Northern Illinois and GFS is a little more lighter with widespread 4 8 WEBSITE'
+    
     #tag_text(test_text, winter_storm_words, 'snow')
 
     
