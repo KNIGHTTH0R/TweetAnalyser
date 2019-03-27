@@ -174,28 +174,43 @@ def pos_tagging(tweets, target_word):
 
     return tagged_tweets 
 
+def examine_rule_parsed_tweet(parsed_tweet, tweet_text, label, results):
+    new_results = results
+
+    for subtree in parsed_tweet.subtrees():
+        if subtree.label() == label:
+            if tweet_text in new_results.keys():
+                new_results[tweet_text].append(subtree)
+            else:
+                new_results[tweet_text] = [subtree]
+
+    return new_results
+
 def local_grammar_analysis(tweets, target_word):
 
+    lg_results = {}
     for tweet in tweets:
         if target_word in tweet['original'][KEY_TEXT_KEYWORDS]:
-            
+            orig_text = tweet['original'][KEY_TEXT_ORIGINAL]
+
             parsed = snow_depth_rules(tweet['tagged'])
-            for subtree in parsed.subtrees():
-                if subtree.label() == 'DEPTH':
-                    print('\n')
-                    print('KEYWORD: {}'.format(target_word))
-                    print('LOCAL GRAMMAR: {}'.format(subtree))
-                    print('TWEET: {}'.format(tweet['original'][KEY_TEXT_ORIGINAL]))
+            lg_results = examine_rule_parsed_tweet(
+                parsed_tweet=parsed,
+                tweet_text=orig_text,
+                label='DEPTH',
+                results=lg_results)
 
             parsed = interstate_rules(tweet['tagged'])
-            for subtree in parsed.subtrees():
-                if subtree.label() == 'INTERSTATE':
-                    print('\n')
-                    print('KEYWORD: {}'.format(target_word))
-                    print('LOCAL GRAMMAR: {}'.format(subtree))
-                    print('TWEET: {}'.format(tweet['original'][KEY_TEXT_ORIGINAL]))
-            
+            lg_results = examine_rule_parsed_tweet(
+                parsed_tweet=parsed,
+                tweet_text=orig_text,
+                label='INTERSTATE',
+                results=lg_results)
 
+    return lg_results
+
+def parse_lg_results():
+    pass
 
 def run_program(raw_tweets, keywords, target_list):
     # Filtering
@@ -211,10 +226,41 @@ def run_program(raw_tweets, keywords, target_list):
     # Local Grammar Analysis
     # Separated Tag and LG Analysis methods.
     # Run LG on tagged tweets.
+    lg_results = {}
     tweets_to_analyse = keyword_filtered
     for target_word in target_list:
-        tagged = pos_tagging(tweets_to_analyse, target_word)
-        local_grammar_analysis(tagged, target_word)
+        tagged_tweet = pos_tagging(tweets_to_analyse, target_word)
+        # Find LG in all tweets using current target word.
+        lg_result = local_grammar_analysis(tagged_tweet, target_word)
+        lg_results[target_word] = lg_result
+
+    print('\n')
+
+    # Analyse LG results
+    for key, analysis in lg_results.items():
+
+        print(f'WORD: {key.upper()}')
+        for tweet, trees in analysis.items():
+            depth = []
+            interstate = []
+            
+            print(tweet.strip())
+            for tree in trees:
+                parts = [word for (word, tag) in tree]
+                if tree.label() == 'DEPTH':
+                    if len(parts) == 2:
+                        depth.append(' to '.join(parts))
+                    else:
+                        depth.append(' '.join(parts))
+
+                elif tree.label() == 'INTERSTATE':
+                    interstate.append('-'.join(parts))
+            
+            if interstate:
+                print('Interstate info: {}'.format(interstate))
+            if depth:
+                print('Snow depth info: {}'.format(depth))
+            print('\n')
 
 def tag_text(text, keywords, target_word):
     tm = TweetManager()
@@ -282,5 +328,3 @@ if __name__ == "__main__":
     #test_text = 'So both NAMs have 6 12 inches of snow across Northern Illinois and GFS is a little more lighter with widespread 4 8 WEBSITE'
     
     #tag_text(test_text, winter_storm_words, 'snow')
-
-    
