@@ -12,7 +12,6 @@ All tweets that pass the filters go into LocalGrammar analysis stage. (Save to s
 
 from glob import glob
 from langdetect import detect
-from stanfordcorenlp import StanfordCoreNLP
 
 from tweet_manager import TweetManager
 from dictionary_manager import DictionaryManager
@@ -44,11 +43,25 @@ def snow_depth_rules(tagged_text):
     parsed = rule_depth_parser.parse(tagged_text)
     return parsed
 
+def inches_of_snow_rules(tagged_text):
+    rule_inches_of_snow = r"""INCHES_OF_SNOW: {<CD><TO>?<CD><NNS><IN><TARGET>}"""
+    rule_inches_of_snow_parser = nltk.RegexpParser(rule_inches_of_snow)
+
+    parsed = rule_inches_of_snow_parser.parse(tagged_text)
+    return parsed
+
 def interstate_rules(tagged_text):
     rule_interstate = r"""INTERSTATE: {<PRP>{1}<CD>{1}}"""
     rule_interstate_parser = nltk.RegexpParser(rule_interstate)
 
     parsed = rule_interstate_parser.parse(tagged_text)
+    return parsed
+
+def perhour_rules(tagged_text):
+    rule_per_hour = r"""PERHOUR: {<CD><CD><IN><NN><TARGET>}"""
+    rule_per_hour_parser = nltk.RegexpParser(rule_per_hour)
+
+    parsed = rule_per_hour_parser.parse(tagged_text)
     return parsed
 
 def print_info(filenames):
@@ -193,6 +206,13 @@ def local_grammar_analysis(tweets, target_word):
         if target_word in tweet['original'][KEY_TEXT_KEYWORDS]:
             orig_text = tweet['original'][KEY_TEXT_ORIGINAL]
 
+            parsed = perhour_rules(tweet['tagged'])
+            lg_results = examine_rule_parsed_tweet(
+                parsed_tweet=parsed,
+                tweet_text=orig_text,
+                label='PERHOUR',
+                results=lg_results)
+
             parsed = snow_depth_rules(tweet['tagged'])
             lg_results = examine_rule_parsed_tweet(
                 parsed_tweet=parsed,
@@ -200,12 +220,19 @@ def local_grammar_analysis(tweets, target_word):
                 label='DEPTH',
                 results=lg_results)
 
+            parsed = inches_of_snow_rules(tweet['tagged'])
+            lg_results = examine_rule_parsed_tweet(
+                parsed_tweet=parsed,
+                tweet_text=orig_text,
+                label='INCHES_OF_SNOW',
+                results=lg_results)
+
             parsed = interstate_rules(tweet['tagged'])
             lg_results = examine_rule_parsed_tweet(
                 parsed_tweet=parsed,
                 tweet_text=orig_text,
                 label='INTERSTATE',
-                results=lg_results)
+                results=lg_results)          
 
     return lg_results
 
@@ -243,6 +270,8 @@ def run_program(raw_tweets, keywords, target_list):
         for tweet, trees in analysis.items():
             depth = []
             interstate = []
+            perhour = []
+            inchessnow = []
             
             print(tweet.strip())
             for tree in trees:
@@ -255,11 +284,23 @@ def run_program(raw_tweets, keywords, target_list):
 
                 elif tree.label() == 'INTERSTATE':
                     interstate.append('-'.join(parts))
-            
+
+                elif tree.label() == 'PERHOUR':
+                    perhour.append(' '.join(parts[:4]))
+
+                elif tree.label() == 'INCHES_OF_SNOW':
+                    inchessnow.append(' '.join(parts))
+
             if interstate:
                 print('Interstate info: {}'.format(interstate))
-            if depth:
+
+            if inchessnow:
+                print('Inches of snow: {}'.format(inchessnow))
+            elif perhour:
+                print('Per hour info: {}'.format(perhour))
+            else:
                 print('Snow depth info: {}'.format(depth))
+
             print('\n')
 
 def tag_text(text, keywords, target_word):
@@ -269,10 +310,11 @@ def tag_text(text, keywords, target_word):
 
     content_filtered_text = tm.clean_tweet(text)
 
+    print(content_filtered_text)
+
     keywords_in_text = tm.find_keywords_in_tweet(content_filtered_text, keywords)
     hashtags_with_keywords = tm.find_hashtags_with_keywords(hashtags, keywords)
 
-    filtered_tweet = {}
     if len(keywords_in_text) or len(hashtags_with_keywords):
         filtered_tweet = {
             KEY_TEXT_ORIGINAL: text,
@@ -280,7 +322,7 @@ def tag_text(text, keywords, target_word):
             KEY_HASHTAGS_WITH_KEYWORDS: hashtags_with_keywords,
             KEY_TEXT_KEYWORDS: keywords_in_text
         }
-    
+        
     # LG
     if target_word in filtered_tweet[KEY_TEXT_KEYWORDS]:
         words = word_tokenize(filtered_tweet[KEY_TEXT_FILTERED])
@@ -299,6 +341,10 @@ def tag_text(text, keywords, target_word):
             if subtree.label() == 'DEPTH':
                 print(subtree)
 
+def print_raw_tweets(tweets):
+    for tweet in tweets:
+        print(tweet['text'])
+
 # Main Function
 if __name__ == "__main__":
     
@@ -314,7 +360,8 @@ if __name__ == "__main__":
     print_info(filenames)
     print('\n')
 
-    raw_tweets = load_tweets_backup(filenames[0])
+    raw_tweets = load_tweets_backup(filenames[0]) #_backup #6
+    #print_raw_tweets(raw_tweets)
     print('Loaded tweets. Size: {}'.format(len(raw_tweets)))
 
     # Running main program
@@ -327,4 +374,5 @@ if __name__ == "__main__":
     # Northern Illinois - NNP NNP
     #test_text = 'So both NAMs have 6 12 inches of snow across Northern Illinois and GFS is a little more lighter with widespread 4 8 WEBSITE'
     
-    #tag_text(test_text, winter_storm_words, 'snow')
+    #test_text = '3 4 per hour snowfall'
+    #tag_text(test_text, winter_storm_words, 'snowfall')
