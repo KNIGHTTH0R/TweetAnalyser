@@ -105,5 +105,4 @@ venv.bak/
 
 # Extra stuff
 secret.py
-*.txt
 .vscode/
