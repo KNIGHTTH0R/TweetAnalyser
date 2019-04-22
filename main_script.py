@@ -15,7 +15,6 @@ from langdetect import detect
 
 from tweet_manager import TweetManager
 from dictionary_manager import DictionaryManager
-from secret import *
 
 from nltk.tokenize import word_tokenize
 import nltk
