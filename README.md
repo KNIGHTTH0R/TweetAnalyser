@@ -1,22 +1,22 @@
 # TweetAnalyser
 Final Year Project in Social Media Analytics and Monitoring.
 
-## Important Note
+### Important Note
 IMPORTANT NOTE. Live collection of tweets is not possible with the current state of the project, as it would require to leave my
 private Twitter keys in the code, which is strongly advised against by Twitter. On requrest I can
 demonstate that the functionality is working, or other persons private keys can be used.
 To use your own keys, navigate to live-tweets and insert them into twitter_credentials.py file.
 
-## Note
+### Note
 This project was created on Ubuntu.
 It would also be easiest to run in on Ubuntu.
 
-# Requirements
+## Requirements
 - Python 3
 - pip (Python package manager)
 - venv (Python virtual environment)
 
-# Running the program on Ubuntu
+## Running the program on Ubuntu
 1. Make sure everything listed in requirements is installed.
 2. Clone the repository, and navigate to it.
 3. Run `python -m venv venv` to create a virtual environment.
